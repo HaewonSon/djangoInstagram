@@ -1,0 +1,13 @@
+
+.FieldWrapper{
+  text-align: center;
+  border-radius: 10px;
+}
+
+body{
+  background-color: orange;
+  font-family: 'Roboto Slab', serif;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}

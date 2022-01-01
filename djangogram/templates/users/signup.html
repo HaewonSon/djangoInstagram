@@ -1,0 +1,29 @@
+{% extends "users/base.html" %}
+{% block title %}
+Sign Up
+{% endblock %}
+
+{% block head %}
+<h2>Sign Up Page</h2>
+{% endblock head %}
+
+{% block content %}
+<form action="{% url 'users:signup'%}" method="post">
+<!--  post 방식으로 접근할때는 csrf 태그 꼭 ! -->
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="FieldWrapper">
+    {{ field.errors }}
+    <br>
+    {{ field }}
+  </div>
+  {% endfor %}
+  <br>
+  <input class="input" type="submit" value="Sign Up">
+</form>
+
+<a href="{% url 'users:main' %}">Log In Page</a>
+{% endblock content %}
+
+<!--  include 태그로 footer 포함시키기 -->
+{% include "users/footer.html" %}

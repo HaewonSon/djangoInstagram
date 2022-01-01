@@ -1,48 +1,47 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.messages.views import SuccessMessageMixin
+from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, RedirectView, UpdateView
+from django.shortcuts import render
+from django.contrib.auth import authenticate, login
+from .forms import SignUpForm
 
-User = get_user_model()
+def main(request):
+    # get 방식이라면
+    if request.method == 'GET':
+        return render(request, 'users/main.html')
 
+    # post 방식이라면
+    elif request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
 
-class UserDetailView(LoginRequiredMixin, DetailView):
+        if user is not None:
+            login(request, user)
+            return HttpResponseRedirect(reverse('posts:index')) # 로그인 성공시 posts 앱 리다이렉트
+        else :
+            return render(request, 'users/main.html') # 로그인 실패시 메인페이지
 
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
+def signup(request):
+    if request.method == 'GET':
+        form = SignUpForm()
 
+        return render(request, 'users/signup.html',{'form':form})
+    elif request.method == 'POST':
+        form = SignUpForm(request.POST)
 
-user_detail_view = UserDetailView.as_view()
+        if form.is_valid(): # 유효성검사
+            form.save() # 저장
 
+            username = form.cleaned_data['username'] # cleaned_data에 저장된 값
+            password = form.cleaned_data['password']
 
-class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+            # 자동으로 로그인 : 위의 코드와 동일
 
-    model = User
-    fields = ["name"]
-    success_message = _("Information successfully updated")
+            user = authenticate(request, username=username, password=password)
 
-    def get_success_url(self):
-        assert (
-            self.request.user.is_authenticated
-        )  # for mypy to know that the user is authenticated
-        return self.request.user.get_absolute_url()
+            if user is not None:
+                login(request, user)
+                return HttpResponseRedirect(reverse('posts:index'))  # 로그인 성공시 posts 앱 리다이렉트
 
-    def get_object(self):
-        return self.request.user
+        return render(request, 'users/main.html')  # 로그인 실패시 메인페이지
 
-
-user_update_view = UserUpdateView.as_view()
-
-
-class UserRedirectView(LoginRequiredMixin, RedirectView):
-
-    permanent = False
-
-    def get_redirect_url(self):
-        return reverse("users:detail", kwargs={"username": self.request.user.username})
-
-
-user_redirect_view = UserRedirectView.as_view()
